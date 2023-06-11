@@ -1,41 +1,75 @@
-use std::{fs, thread, time::Duration};
+use std::{
+    fs::{self, File},
+    path::Path,
+    thread,
+    time::Duration,
+};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use args::Args;
 use clap::Parser;
-use config::parse_json_file;
-use log::info;
+use config::{parse_json_file, BalancaConfig};
+use env_logger::Builder;
+use log::{error, info};
 
 use crate::port::connect_to_port;
 
 mod args;
-mod port;
 mod config;
+mod port;
+
+fn config_logger(config: &BalancaConfig) -> Result<()> {
+    let target = Box::new(File::create(&config.balanca_log)?);
+
+    Builder::new()
+        .default_format()
+        .target(env_logger::Target::Pipe(target))
+        .init();
+
+    Ok(())
+}
 
 fn main() -> Result<()> {
-    env_logger::init();
     let args = Args::parse();
-
     let config = parse_json_file(&args.config)?;
-    let enq_send_file = "/tmp/.balanca_snd";
+
+    config_logger(&config)?;
 
     if !config.balanca_habilitar {
+        error!("Balance is not enabled");
         return Err(anyhow!("Balance is not enabled"));
     }
 
     loop {
-        if fs::metadata(&enq_send_file).is_ok() {
-            info!("File '{}' exists. Performing actions...", enq_send_file);
-            connect_to_port(&config.balanca_porta, config.balanca_velocidade).unwrap_or(());
-            delete_file(&enq_send_file)?;
+        if fs::metadata(&config.balanca_snd).is_ok() {
+            info!(
+                "File '{}' exists. Performing actions...",
+                &config.balanca_snd.display()
+            );
+            match connect_to_port(
+                &config.balanca_porta,
+                config.balanca_velocidade,
+                &config.balanca_rcv,
+                &config.balanca_protocolo,
+            ) {
+                Err(e) => {
+                    error!(
+                        "Unable to execute the connection to the port: {} error: {}",
+                        config.balanca_porta.display(),
+                        e
+                    );
+                }
+                Ok(_) => {}
+            };
+            delete_file(&config.balanca_snd)?;
         }
 
         thread::sleep(Duration::from_secs(1));
     }
 }
 
-fn delete_file(file_path: &str) -> Result<()> {
+fn delete_file(file_path: &Path) -> Result<()> {
     fs::remove_file(file_path)?;
-    info!("File '{}' deleted", file_path);
+    info!("File '{}' deleted", file_path.display());
     Ok(())
 }

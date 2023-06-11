@@ -8,6 +8,9 @@ pub struct BalancaConfig {
     pub balanca_protocolo: String,
     pub balanca_porta: PathBuf,
     pub balanca_velocidade: u32,
+    pub balanca_snd: PathBuf,
+    pub balanca_rcv: PathBuf,
+    pub balanca_log: PathBuf,
 }
 
 pub fn parse_json_file(file_path: &Path) -> Result<BalancaConfig> {

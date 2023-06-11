@@ -1,7 +1,8 @@
 use std::{
+    fs,
     io::{self, Write},
     path::Path,
-    time::{Duration, Instant}, fs,
+    time::{Duration, Instant},
 };
 
 use anyhow::{anyhow, Result};
@@ -67,26 +68,43 @@ fn execute_read_loop(port: &mut SerialPortBox, duration: Duration) -> Result<Vec
     Ok(buffer)
 }
 
-fn treat_weight(values: &[u8]) -> Result<()> {
+fn treat_weight(values: &[u8], balance_rcv: &Path) -> Result<()> {
     let value = String::from_utf8_lossy(&values[1..values.len() - 1]);
-    let mut file = fs::File::create("/tmp/.balanca_rcv")?;
+    let mut file = fs::File::create(balance_rcv)?;
+
+    info!(
+        "The contet: {} was saved on the {} file",
+        &value,
+        balance_rcv.display()
+    );
+
     file.write_all(value.as_bytes())?;
 
-    println!("{}", value);
     Ok(())
 }
 
-pub fn connect_to_port(port_path: &Path, bud_rate: u32) -> Result<()> {
+pub fn connect_to_port(
+    port_path: &Path,
+    bud_rate: u32,
+    balance_rcv: &Path,
+    protocol: &str,
+) -> Result<()> {
     let mut port = return_port_connection(port_path, bud_rate)?;
 
+    info!("The command 0x05 was sent to the port {:#?}", port);
     send_command(&mut port, &[0x05])?;
 
     let buffer = execute_read_loop(&mut port, Duration::from_secs(5))?;
 
     if !valid_port_answer(&buffer) {
+        error!(
+            "The balance answered {:?}, the protocol {}, does not support this",
+            buffer, protocol
+        );
         return Err(anyhow!("Invalid answer"));
     }
-    treat_weight(&buffer)?;
+
+    treat_weight(&buffer, &balance_rcv)?;
 
     Ok(())
 }
