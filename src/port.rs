@@ -98,8 +98,8 @@ pub fn connect_to_port(
 
     if !valid_port_answer(&buffer) {
         error!(
-            "The balance answered {:?}, the protocol {}, does not support this",
-            buffer, protocol
+            "The balance answered {}, the protocol {}, does not support this",
+            String::from_utf8_lossy(&buffer), protocol
         );
         return Err(anyhow!("Invalid answer"));
     }
