@@ -1,9 +1,13 @@
 # S.B.M
 Serial Balance Monitor
 
+## Installation
+
+run `cargo build --release` and move the `./target/release/sbm` to your `$PATH`
+
 ## Usage
 
-Execute the binary with the config file as a parameter
+Execute the program with the config file as a parameter
 
 ```
 sbm -c ./config.json
