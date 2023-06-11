@@ -1,0 +1,8 @@
+{
+	"balanca_habilitar": true,
+	"balanca_protocolo": "PRT3",
+	"balanca_porta": "/dev/pts/4",
+	"balanca_velocidade": 9300,
+	"balanca_snd": "/tmp/.balanca_snd",
+	"balanca_log": "/tmp/balanca.log"
+}
