@@ -86,12 +86,8 @@ pub fn connect_to_port(port_path: &Path, bud_rate: u32) -> Result<()> {
     if !valid_port_answer(&buffer) {
         return Err(anyhow!("Invalid answer"));
     }
-
     treat_weight(&buffer)?;
 
-    /* let received_content = String::from_utf8_lossy(&buffer[1..buffer.len() - 1]);
-    println!("Received content: {:?}", received_content); // Print the received content */
-    //
     Ok(())
 }
 
